@@ -1,0 +1,118 @@
+---
+title: Horizontal Telco Cloud – Testing, Certification, Validation Framework (TCVF) v0.3.2c
+---
+
+flowchart LR
+
+%% =========================
+%% PHASE 0: REFERENCE FOUNDATIONS
+%% =========================
+ETSI["ETSI / 3GPP / CNCF<br/>Reference Standards"]
+REF["Reference Architecture"]
+RDS["Reference Design Specs"]
+
+%% =========================
+%% PHASE 1: VENDOR VALIDATION
+%% =========================
+subgraph P1["Phase 1 — Vendor Validation"]
+direction LR
+
+subgraph PV_LAB["1 — Platform Vendor Lab"]
+direction TB
+PV1["Platform Validation<br/>• Broadcom<br/>• Red Hat<br/>• Wind River"]
+end
+
+subgraph XNF_LABS["2 — xNF Vendor Labs"]
+direction TB
+VV1["xNF Certification<br/>Customisation / Testing / Blueprinting<br/>• Ericsson • Nokia • Mavenir • Oracle"]
+BP_A["xNF Blueprint (Vendor A)"]
+BP_B["xNF Blueprint (Vendor B)"]
+ARTEFACTS["Certified Artefacts<br/>• Images<br/>• Helm Charts<br/>• Infra / Platform Customisations"]
+end
+
+end
+
+%% =========================
+%% PHASE 2: SI ONBOARDING & VALIDATION
+%% =========================
+subgraph P2["Phase 2 — SI Validation"]
+direction LR
+
+subgraph NNO_SI["3 — NNO / SI Lab"]
+direction TB
+PIPE["Onboarding Mechanism (Orchestrator / Pipeline)"]
+ONBOARD["Onboarding Validation<br/>• SI Testing<br/>• VA Certification<br/>• PO Approval<br/>• Behavioural Testing (Functional + Performance)"]
+end
+
+VALID_ART["Validated Onboarding Artefacts"]
+DEFECT["Defect / Non-Conformance"]
+end
+
+%% =========================
+%% PHASE 3: DEPLOYMENT
+%% =========================
+subgraph P3["Phase 3 — Deployment"]
+direction LR
+PREPROD["Pre-Prod (Non-Live)<br/>Deployment Testing"]
+PPFAIL["Pre-Prod Failure"]
+PPWIN["Pre-Prod Success"]
+CRQ["Change Control (CRQ)"]
+PROD["Prod (Live Deployment)"]
+end
+
+%% =========================
+%% NON-VERTICAL / UNCERTIFIED ENTRY
+%% =========================
+subgraph NV["Non-Vertical Stack Vendor"]
+direction TB
+VENDORX["Uncertified xNF Vendor X"]
+VX_ART["Uncertified Artefacts<br/>• Images<br/>• Helm Charts"]
+end
+
+%% =========================
+%% FLOWS
+%% =========================
+ETSI --> PV1
+ETSI --> VV1
+
+PV1 --> REF
+PV1 --> RDS
+
+REF --> VV1
+RDS --> VV1
+
+VV1 --> BP_A
+VV1 --> BP_B
+BP_A --> ARTEFACTS
+BP_B --> ARTEFACTS
+
+%% Uncertified xNF inputs
+REF --> VENDORX
+
+%% Uncertified xNF to onboarding
+VENDORX --> VX_ART
+VX_ART --> PIPE
+
+%% Onboarding inputs
+REF --> PIPE
+RDS --> PIPE
+ARTEFACTS --> PIPE
+
+PIPE --> ONBOARD
+ONBOARD --> VALID_ART
+ONBOARD --> DEFECT
+
+%% Deployment gates
+VALID_ART --> PREPROD
+VALID_ART --> CRQ
+
+PREPROD --> PPFAIL
+PREPROD --> PPWIN
+PPWIN --> CRQ
+CRQ --> PROD
+
+%% Feedback loops
+PPFAIL --> ONBOARD
+DEFECT --> PV1
+DEFECT --> VV1
+DEFECT --> VENDORX
